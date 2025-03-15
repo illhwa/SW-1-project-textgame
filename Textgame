@@ -132,14 +132,21 @@ def play_game():
         if random.random() < 0.4:  # 40% 확률로 이벤트 발생
             encounter_event(player)
         else:
-            monster = Monster("슬라임", 1, random.choice(["홀짝"]))
-            success = monster.challenge(player)
+            if random.random() <0.3:
+                monster = Monster("슬라임", 1, random.choice(["홀짝"]))
+                success = monster.challenge(player)
+            
+            if  random.random() <0.3
+                monster = Monster("스켈레톤", 1, random.choice(["가위바위보"]))
+                success = monster.challenge(player)
 
-            monster = Monster("스켈레톤", 1, random.choice(["가위바위보"]))
-            success = monster.challenge(player)
-
-            monster = Monster("고블린", 1, random.choice(["홀짝", "가위바위보"]))
-            success = monster.challenge(player)
+            if  random.random() <0.3
+                monster = Monster("고블린", 1, random.choice(["홀짝", "가위바위보"]))
+                success = monster.challenge(player)
+            
+            if  random.random()< 0.1
+                monster = Monster("레드 드래곤", 1, random.choice(["홀짝","가위바위보"]))
+                success = monster.challenge(player)
             
             if player.hp <= 0:
                 print("사망했습니다. 게임 오버!")
