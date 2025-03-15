@@ -1,0 +1,159 @@
+import random
+import time
+
+class Player:
+    def __init__(self, name):
+        self.name = name
+        self.hp = 100
+        self.gold = 0
+        self.strength = 10
+        self.inventory = []
+        self.dead = False
+        self.companion = None  # 동료 추가
+
+    def show_status(self):
+        print(f"\n[{self.name}의 상태]")
+        print(f"HP: {self.hp}, Gold: {self.gold}, Strength: {self.strength}")
+        print(f"Inventory: {self.inventory}")
+        if self.companion:
+            print(f"동료: {self.companion}")
+        print()
+
+class Monster:
+    def __init__(self, name, difficulty, game_type):
+        self.name = name
+        self.difficulty = difficulty
+        self.game_type = game_type
+        self.hp = difficulty * 20  # 몬스터 체력 추가
+
+    def challenge(self, player):
+        print(f"{self.name} 몬스터가 나타났다! 미니게임: {self.game_type}")
+        while self.hp > 0 and player.hp > 0:
+            action = input("싸운다(S) 또는 도망간다(R)? ").upper()
+            if action == "R":
+                if random.random() < 0.5:  # 50% 확률로 도망 성공
+                    print("도망쳤습니다!")
+                    return False
+                else:
+                    print(f"도망 실패하며 {self.name}(이)가 당신에게 5데미지를 입혔다. 전투 계속 진행.")
+                    player.hp -= 5
+            else:
+                success = mini_game(self.game_type, player)
+                if success:
+                    self.hp -= player.strength  # 플레이어 공격력만큼 체력 감소
+                    print(f"{self.name}의 남은 체력: {self.hp}")
+                if self.hp <= 0:
+                    print(f"{self.name}을(를) 물리쳤습니다!")
+                    return True
+            if player.hp <= 0:
+                print("당신은 쓰러졌습니다! 게임 오버!")
+                player.dead = True
+                return False
+        return False
+
+
+def mini_game(game_type, player):
+    if game_type == "홀짝":
+        return odd_even_game(player)
+    elif game_type == "가위바위보":
+        return rock_paper_scissors(player)
+    return False
+
+
+def odd_even_game(player):
+    choice = input("홀 또는 짝 선택: ").upper()
+    dice = random.randint(1, 6)
+    print(f"주사위 결과: {dice}")
+    if (dice % 2 == 0 and choice == '짝') or (dice % 2 == 1 and choice == '홀'):
+        print("성공!")
+        player.gold += 10
+        return True
+    print("실패!")
+    player.hp -= 10
+    return False
+
+
+def rock_paper_scissors(player):
+    choices = ['가위', '바위', '보']
+    player_choice = input("가위, 바위, 보 중 선택: ")
+    computer_choice = random.choice(choices)
+    print(f"몬스터의 선택: {computer_choice}")
+    if player_choice == computer_choice:
+        print("무승부!")
+        return True
+    elif (player_choice == "가위" and computer_choice == "보") or \
+         (player_choice == "바위" and computer_choice == "가위") or \
+         (player_choice == "보" and computer_choice == "바위"):
+        print("승리!")
+        player.gold += 10
+        return True
+    print("패배!")
+    player.hp -= 10
+    return False
+
+
+def encounter_event(player):
+    event_type = random.choice(["동굴", "동료", "함정"])
+    if event_type == "동굴":
+        choice = input("당신은 동굴을 발견했습니다. 안에 들어가시겠습니까? (예/아니오) ").lower()
+        if choice == "예":
+          if random.random() <0.5:
+              print("동굴 안에서 보물을 발견했습니다! 골드 +20")
+              player.gold += 20
+          if random.random() <0.3:
+              print("동굴 안에는 누군가 놓은 함정이 있었습니다. 체력이 감소했습니다... 체력 -20")
+              player.hp -= 20
+          else:
+              print("동굴 안에는 보물은 없었습니다. 하지만 편하게 쉴순 있었습니다. 체력 +10")
+              player.hp += 10
+        else:
+            print("당신은 동굴을 무시하고 지나쳤습니다.")
+    elif event_type == "동료" and player.companion is None:
+        companions = ["전사", "마법사", "늑대"]
+        new_companion = random.choice(companions)
+        choice = input(f"{new_companion}를 동료로 받아들이시겠습니까? (예/아니오) ").lower()
+        if choice == "예":
+            print(f"{new_companion}가 당신의 동료가 되었습니다!")
+            player.companion = new_companion
+        else:
+            print(f"{new_companion}를 거절했습니다. 그/그녀/그것(이)가 당신을 기억할 것입니다.")
+    elif event_type == "함정":
+        print("함정에 걸렸습니다! HP -15")
+        player.hp -= 15
+
+
+def play_game():
+    name = input("플레이어 이름을 입력하세요: ")
+    player = Player(name)
+    
+    while not player.dead:
+        player.show_status()
+        
+        if random.random() < 0.4:  # 40% 확률로 이벤트 발생
+            encounter_event(player)
+        else:
+            monster = Monster("슬라임", 1, random.choice(["홀짝"]))
+            success = monster.challenge(player)
+
+            monster = Monster("스켈레톤", 1, random.choice(["가위바위보"]))
+            success = monster.challenge(player)
+
+            monster = Monster("고블린", 1, random.choice(["홀짝", "가위바위보"]))
+            success = monster.challenge(player)
+            
+            if player.hp <= 0:
+                print("사망했습니다. 게임 오버!")
+                player.dead = True
+                break
+            
+            if success:
+                print("던전 탈출에 가까워졌습니다...")
+                if random.random() < 0.3:
+                    print("상점 발견! 아이템을 구매할 수 있습니다.")
+                if random.random() < 0.2:
+                    print("쉼터 발견! 체력을 회복할 수 있습니다.")
+                    player.hp += 20
+            else:
+                print("던전에서 길을 잃었습니다...")
+    
+play_game()
