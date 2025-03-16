@@ -1,0 +1,250 @@
+import random
+import time
+import string
+
+class Player:
+    def __init__(self, name):
+        self.name = name
+        self.health = 100
+        self.attack = 20
+        self.defense = 10
+        self.coins = 0
+        self.items = []
+        self.companion = None
+
+    def show_stats(self):
+        print("\n📜 [플레이어 능력치]")
+        print(f"❤️ 체력: {self.health}")
+        print(f"⚔️ 공격력: {self.attack}")
+        print(f"🛡️ 방어력: {self.defense}")
+        print(f"💰 재화: {self.coins}원")
+        print(f"🎒 보유 아이템: {self.items if self.items else '없음'}\n")
+        if self.companion:
+            print(f"🧑‍🤝‍🧑 동료: {self.companion['name']} (공격력 +{self.companion['attack']})")
+        print()
+
+    def attack_monster(self, monster):
+        damage = self.attack
+        monster.health -= damage
+        print(f"⚔️ 플레이어의 공격! 몬스터에게 {damage}만큼 데미지 주었음. 몬스터 체력: {monster.health}")
+
+    def heal(self):
+        self.health = 100
+        print("🍀 체력이 가득 차서 완전히 회복했습니다!")
+
+    def buy_item(self, item):
+        self.items.append(item)
+        print(f"🛍️ {item}을(를) 구매했습니다!")
+
+    def lose_stats_on_death(self):
+        self.attack = max(5, self.attack - 5)
+        self.defense = max(5, self.defense - 3)
+        print("⚠️ 능력치가 일부 감소했습니다! 공격력과 방어력이 줄어들었습니다.")
+
+class Monster:
+    def __init__(self, name, health, attack, grade):
+        self.name = name
+        self.health = health
+        self.attack = attack
+        self.grade = grade
+        self.coins = self.calculate_coins()
+
+    def calculate_coins(self):
+        if self.grade == "일반":
+            return random.randint(1, 3)
+        elif self.grade == "레어":
+            return random.randint(4, 7)
+        else:  # 보스
+            return random.randint(8, 15)
+
+    def show_stats(self):
+        print(f"👹 몬스터 이름: {self.name}")
+        print(f"등급: {self.grade}")
+        print(f"❤️ 체력: {self.health}")
+        print(f"⚔️ 공격력: {self.attack}")
+        print(f"💰 주는 재화: {self.coins}원")
+
+    def attack_player(self, player):
+        damage = self.attack
+        player.health -= damage
+        print(f"💥 몬스터의 공격! {damage}만큼 데미지 받음. 체력: {player.health}")
+
+# 🎲 홀짝 게임
+def dice_game():
+    print("🎲 홀짝 게임! (주사위 굴리기)")
+    guess = input("홀(h) 또는 짝(e) 선택: ").lower()
+    roll = random.randint(1, 6)
+    print(f"🎲 주사위 결과: {roll}")
+    return (roll % 2 == 0 and guess == 'e') or (roll % 2 == 1 and guess == 'h')
+
+# ✊✋✌️ 가위바위보 게임
+def rock_paper_scissors():
+    print("✊✋✌️ 가위바위보 게임!")
+    choices = ["가위", "바위", "보"]
+
+    while True:
+      player_choice = input("가위, 바위, 보 중 선택: ")
+      monster_choice = random.choice(choices)
+      print(f"👹 몬스터: {monster_choice}")
+
+      if player_choice == monster_choice:
+          print("⚖️ 무승부! 다시 도전!")
+          return rock_paper_scissors()
+      elif (player_choice == "가위" and monster_choice == "보") or \
+           (player_choice == "바위" and monster_choice == "가위") or \
+           (player_choice == "보" and monster_choice == "바위"):
+          return True
+      else:
+          return False
+
+# ⏱️ 타이밍 맞추기 게임
+def timing_game():
+    print("⏱️ 타이밍 맞추기 게임!")
+    print("지금 타이밍을 맞춰서 Enter를 눌러보세요!")
+    time.sleep(random.uniform(1, 3))  # 1~3초 사이에 타이밍을 맞춰야 함
+    start = time.time()
+    input("누르면 타이밍이 시작됩니다! (Enter 키) ")
+    reaction_time = time.time() - start
+
+    print(f"반응 시간: {reaction_time:.3f}초")
+    return reaction_time < 2  # 2초 이내에 맞추면 성공
+
+
+# 🏹 전투 시스템 (업데이트된 미니게임 포함)
+def battle(player, monster):
+    print("\n⚔️ 몬스터와의 전투 시작!")
+
+    mini_games = [
+        dice_game, rock_paper_scissors, timing_game
+    ]
+
+    while monster.health > 0:
+        print("\n🔥 미니게임 도전!")
+        game = random.choice(mini_games)
+
+        if game():  # 미니게임에서 승리 시
+            print("🎉 승리! 몬스터에게 공격 성공!")
+            player.attack_monster(monster)
+        else:  # 미니게임에서 패배 시
+            print("💥 패배! 몬스터의 공격!")
+            monster.attack_player(player)
+
+        if player.health <= 0:
+            print("💀 플레이어가 사망했습니다...")
+            player.lose_stats_on_death()
+            return False  # 게임 종료
+
+    print(f"🎊 몬스터 처치 완료! +{monster.coins} 재화 획득!")
+    player.coins += monster.coins
+
+    # 전투 끝난 후 엔터를 누를 때까지 기다림
+    input("전투가 끝났습니다. 다음으로 넘어가려면 Enter를 누르세요...")
+
+    return True  # 몬스터 처치 후 전투 종료
+
+# 🏰 던전 탐험
+def dungeon(player):
+    while player.health > 0:
+        print("\n🔍 던전 탐험 중...")
+        # 던전에서 만날 수 있는 상황들
+        event = random.choices(["monster", "shop", "rest", "trap", "companion"], [0.4, 0.2, 0.2, 0.1, 0.1])[0]
+
+        if event == "monster":
+            monster_name = random.choice(["악몽의 괴물", "지옥의 사자", "구름의 마왕", "불사의 괴물", "어둠의 지배자"])
+            grade = random.choices(["일반", "레어", "보스"], [0.5, 0.3, 0.2])[0]
+            if grade == "일반":
+                monster = Monster(monster_name, health=30, attack=5, grade="일반")
+            elif grade == "레어":
+                monster = Monster(monster_name, health=50, attack=10, grade="레어")
+            else:  # 보스
+                monster = Monster(monster_name, health=100, attack=20, grade="보스")
+
+            monster.show_stats()
+            if not battle(player, monster):
+                restart = input("게임이 종료되었습니다. 다시 시작하시겠습니까? (y/n): ").lower()
+                if restart == "y":
+                    player.health = 100
+                    continue
+                else:
+                    break
+        elif event == "shop":
+            print("\n🛒 상점을 발견했습니다!")
+            shop_items = [ "빵", "햄버거", "불굴의 방패", "강화된 마검"]
+            print("상점 아이템:", shop_items)
+            item_choice = input("아이템을 구매하시겠습니까? (y/n): ").lower()
+            if item_choice == "y":
+                print("어떤걸 구매하시겠습니까?")
+                item_buy = input("")
+            if item_buy == "빵":
+                print("잘 구워진 빵 먹으면 포만감(10)과 체력(5)이(가) 올라간다. 가격은 5골드")
+                item_result = input("구매하시겠습니까? 네(Y)/아니요(N)")
+                if item_result == "네" or item_result == "Y":
+                    print("빵을 구매하였다!")
+                    player.buy_item("빵")
+                else:
+                    continue
+
+            if item_buy == "햄버거":
+                print("맛있는 햄버거다! 왠지 모르겠지만 선문대본관점 뉴욕버거라 써있다. 포만감(30)과 체력(15)이(가) 올라간다. 가격은 15골드")
+                item_result = input("구매하시겠습니까? 네(Y)/아니요(N)")
+                if item_result == "네" or item_result == "Y":
+                    print("햄버거를 구매하였다!")
+                    player.buy_item("햄버거")
+                else:
+                    continue
+
+            if item_buy == "불굴의 방패":
+                print("뭔가 엄청 강력해보이는 방패. 뭐든 다 막을 수 있을거 같다. 체력이(5)올라가고 방어력이(30)올라간다. 가격은 100골드")
+                item_result = input("구매하시겠습니까? 네(Y)/아니요(N)")
+                if item_result == "네" or item_result == "Y":
+                    print("불굴의 방패를 구매하였다!")
+                    player.coins -= 100
+                    player.defense += 30
+                    player.health += 5
+                    player.buy_item("불굴의 방패")
+                else:
+                    continue
+
+            if item_buy == "강화된 마검":
+                print("귀철로 만든 마검, 이것만 있으면 모든 몬스터는 원턴킬 할 수 있을거 같다. 공격력이(20)올라가지만 현재 체력이(50)감소한다. 가격은 300골드")
+                item_result = input("구매하시겠습니까? 네(Y)/아니오(N)")
+                if item_result == "네" or item_result == "Y":
+                    print("강화된 마검을 구매하였다!")
+                    player.coins -= 300
+                    player.attack += 20
+                    player.health -= 50
+                    player.buy_item("강화된 마검")
+                else:
+                    continue
+
+                item = random.choice(shop_items)
+                player.buy_item(item)
+
+        elif event == "rest":
+            print("\n🛌 쉼터 발견! 체력을 회복합니다.")
+            player.heal()
+
+        elif event == "trap":
+            print("\n⚠️ 함정에 빠졌습니다! 체력이 반으로 줄어듭니다.")
+            player.health //= 2
+
+        elif event == "동료" and player.companion is None:
+            companions = ["전사", "마법사", "늑대"]
+            new_companion = random.choice(companions)
+            choice = input(f"{new_companion}를 동료로 받아들이시겠습니까? (예/아니오) ").lower()
+            if choice == "예":
+                print(f"{new_companion}가 당신의 동료가 되었습니다!")
+                player.companion = new_companion
+            else:
+                print(f"{new_companion}를 거절했습니다. 그/그녀/그것(이)가 당신을 기억할 것입니다.")
+
+        player.show_stats()
+
+# 메인 함수
+def main():
+    name = input("🎮 던전 탐험 게임에 오신 걸 환영합니다! 캐릭터의 이름을 입력해주세요: ")
+    player = Player(name)
+    dungeon(player)
+
+if __name__ == "__main__":
+    main()
